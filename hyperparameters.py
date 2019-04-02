@@ -1,5 +1,14 @@
 num_of_state = 4
 position_var = 7.0
-speed_var = 1.0
-detection_weight_percent = 0.5
-appearance_weight_percent = 0.5
+speed_var = 2.0
+detection_weight_percent = 0.6
+appearance_weight_percent = 0.4
+video_frame_dir = 'pets_frames'
+tracking_Out = 'tracking_Out'
+number_of_frames = 199
+number_of_particles = 200
+alpha =1
+output_path = 'tracker_out'
+bounded_image_out = 'bounded_image_out'
+image_size = [576,768]
+color = [(255,0,0),(0,255,0),(0,0,255),(255,255,0),(255,0,255),(0,255,255),(0,0,0)]
