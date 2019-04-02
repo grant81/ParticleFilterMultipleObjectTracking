@@ -14,7 +14,7 @@ def show_bb_on_image(frame,save):
     frameNum = '{0:04}'.format(frame)
     img = plt.imread(hyperparameters.video_frame_dir + '/frame_'+frameNum+'.jpg')
     bbInfo = pd.read_csv('tracker_out/frame_'+frameNum+'.txt', delimiter=' ', header=None)
-    boundingBox = bbInfo.values()
+    boundingBox = bbInfo.values
     if save == 0:
         pedestrainDetection.visualize_bounding_box(boundingBox, img, 1)
     else:
@@ -89,8 +89,8 @@ def start_tracking():
         output = np.array(output)
         output = pd.DataFrame(output.astype('int'))
         output.to_csv(hyperparameters.output_path+'/'+'frame_'+frame_id+'.txt',sep=' ',header=False,index=False)
+        show_bb_on_image(frame,1)
 
-
-#start_tracking()
-for i in range(200):
-    show_bb_on_image(i,1)
+start_tracking()
+# for i in range(200):
+#     show_bb_on_image(i,1)

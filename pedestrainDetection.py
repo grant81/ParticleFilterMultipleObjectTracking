@@ -12,7 +12,7 @@ def get_bounding_boxes_HOG(image, verbose=0):
     # image = imutils.resize(image, width=min(400, image.shape[1]))
     orig = image.copy()
     # detect people in the image
-    (rects, weights) = hog.detectMultiScale(image, padding=(8, 8), scale=1.05)
+    (rects, weights) = hog.detectMultiScale(image,padding=(8, 8), scale=1.01,winStride=(2,2),finalThreshold=0.1)
     # weights = np.reshape(weights,weights.shape[0])
     # bounding_box_dict = dict(zip(weights,rects))
 
