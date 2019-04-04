@@ -45,8 +45,13 @@ class particle:
     def set_pos(self, pos):
         if pos[0] < 0:
             pos[0] = 0
+        elif pos[0] >=hyperparameters.image_size[1]:
+            pos[0] = hyperparameters.image_size[1] -1
         if pos[1] < 0:
             pos[1] = 0
+        elif pos[1] >= hyperparameters.image_size[0]:
+            pos[1] = hyperparameters.image_size[0] -1
+
         self.pos = pos
 
 
@@ -61,6 +66,7 @@ class ParticleFilter:
         self.bounding_box_size = np.array([self.bounding_box[2], self.bounding_box[3]])
         self.last_four_size = np.array([[self.bounding_box[2], self.bounding_box[3]] for k in range(4)])
         self.detected = 1
+        self.removed = 0
         weight = 1 / particle_num
         self.weights = np.ones(self.particle_num) * weight
         initial_pos = self.sample_init_position(self.bounding_box_position, particle_num)
@@ -73,9 +79,11 @@ class ParticleFilter:
             self.particles.append(pa)
 
     def update(self, new_frame, bounding_box):
-        self.proporgate()
+        self.proporgate() #this is the particles's prediction about the future location
         self.measure(new_frame, bounding_box)
         self.resample()
+        self.last_four_size = np.delete(self.last_four_size,0,0)
+        self.last_four_size = np.append(self.last_four_size,[bounding_box[2:]],0)
         bounding_box = self.get_bounding_box()
         self.detected = 1
         return bounding_box
@@ -113,7 +121,7 @@ class ParticleFilter:
             if xlim > self.frame.shape[1]:
                 xlim = self.frame.shape[1]
 
-            curr_bb_image = self.frame[int(pos[1]):ylim, int(pos[0]):xlim]
+            curr_bb_image = new_frame[int(pos[1]):ylim, int(pos[0]):xlim]
             curr_bb_upper = curr_bb_image[:int(curr_bb_image.shape[0] / 2), :]
             curr_bb_lower = curr_bb_image[int(curr_bb_image.shape[0] / 2):, :]
             hsv_upper_curr = cv2.cvtColor(curr_bb_upper, cv2.COLOR_BGR2HSV)
@@ -193,7 +201,7 @@ class ParticleFilter:
         return noise
 
     def get_avg_size(self):
-        return np.average(self.last_four_size, axis=0)
+        return np.average(np.array(self.last_four_size), axis=0)
 
     def get_bounding_box_image(self):
         return extract_bounding_box_image(self.frame, self.bounding_box)

@@ -10,16 +10,16 @@ import pedestrainDetection
 from particleFilter import extract_bounding_box_image, ParticleFilter, compare_HSV_histograms
 particle_num = hyperparameters.number_of_particles
 
-def show_bb_on_image(frame,save):
-    frameNum = '{0:04}'.format(frame)
-    img = plt.imread(hyperparameters.video_frame_dir + '/frame_'+frameNum+'.jpg')
-    bbInfo = pd.read_csv('tracker_out/frame_'+frameNum+'.txt', delimiter=' ', header=None)
+def show_bb_on_image(frame,tracker_out_dir,video_frame_dir,save):
+
+    img = plt.imread(video_frame_dir + '/frame_'+frame+'.jpg')
+    bbInfo = pd.read_csv(tracker_out_dir+'/frame_'+frame+'.txt', delimiter=' ', header=None)
     boundingBox = bbInfo.values
     if save == 0:
         pedestrainDetection.visualize_bounding_box(boundingBox, img, 1)
     else:
         img_out = pedestrainDetection.visualize_bounding_box(boundingBox, img, 0)
-        plt.imsave(hyperparameters.bounded_image_out+'/frame_'+frameNum+'.jpg',img_out)
+        plt.imsave(hyperparameters.bounded_image_out+'/frame_'+frame+'.jpg',img_out)
 
 # boundingBox = pedestrainDetection.get_bounding_boxes_HOG(img, 1)
 
@@ -53,12 +53,17 @@ def greedy_assignment(similarity_matrix):
         similarity_matrix[:, max_det] = 0
     return assignment, remain_detections, remain_identites
 
-def start_tracking():
+def start_tracking(video_frame_dir,start_frame = 0,output_dir= hyperparameters.output_path,tracker = 0):
     identities = []
     for frame in range(hyperparameters.number_of_frames):
-        frame_id = '{0:04}'.format(frame)
-        img = cv2.imread(hyperparameters.video_frame_dir + '/frame_' + frame_id + '.jpg')
-        bounding_boxes = pedestrainDetection.get_bounding_boxes_HOG(img, 0)
+        f_id = '{0:04}'.format(frame+start_frame)
+        det_id  = '{0:04}'.format(frame)
+        img = cv2.imread(video_frame_dir + '/frame_' + f_id + '.jpg')
+        if tracker == 0:
+            bounding_boxes = pedestrainDetection.get_bounding_boxes_HOG(img, 0)
+        else:
+            bounding_boxes = pd.read_csv(hyperparameters.high_performance_detetion_path+'/frame_' + det_id + '.txt', delimiter=' ', header=None)
+            bounding_boxes = bounding_boxes.values
         if len(identities) == 0:
             for i in range(len(bounding_boxes)):
                 track = ParticleFilter(img, particle_num, i, frame, bounding_boxes[i, :])
@@ -67,7 +72,10 @@ def start_tracking():
             similarity_matrix = np.zeros((len(identities), len(bounding_boxes)))
             for b in range(len(bounding_boxes)):
                 for id in range(len(identities)):
-                    similarity_matrix[id][b] = calculate_similarity_score(identities[id], img, bounding_boxes[b])
+                    if identities[id].removed==0:
+                        similarity_matrix[id][b] = calculate_similarity_score(identities[id], img, bounding_boxes[b])
+                    else:
+                        similarity_matrix[id][b] = 0
             assignment, remain_detections, remain_identites =greedy_assignment(similarity_matrix)
             for pair in assignment:
                 identities[pair].update(img, bounding_boxes[assignment[pair]])
@@ -77,7 +85,9 @@ def start_tracking():
                     identities.append(track)
             if len(remain_identites)!=0:
                 for id in remain_identites:
-                    identities[id].detected = 0
+                    identities[id].detected -=1
+                    if -1*identities[id].detected >=hyperparameters.untracked_id_life_cycle:
+                        identities[id].removed = 1
         output = []
         for tr in identities:
             if tr.detected ==1:
@@ -88,9 +98,11 @@ def start_tracking():
                 output.append(temp)
         output = np.array(output)
         output = pd.DataFrame(output.astype('int'))
-        output.to_csv(hyperparameters.output_path+'/'+'frame_'+frame_id+'.txt',sep=' ',header=False,index=False)
-        show_bb_on_image(frame,1)
+        output.to_csv(output_dir+'/'+'frame_'+f_id+'.txt',sep=' ',header=False,index=False)
+        show_bb_on_image(f_id,output_dir,video_frame_dir,1)
+        print('frame '+f_id+' finish tracking')
 
-start_tracking()
+# show_bb_on_image(0,0)
+start_tracking(video_frame_dir=hyperparameters.video_frame_dir,output_dir= hyperparameters.output_path,start_frame=0,tracker=1)
 # for i in range(200):
 #     show_bb_on_image(i,1)

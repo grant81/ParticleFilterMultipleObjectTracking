@@ -37,7 +37,7 @@ def visualize_bounding_box(bounding_boxses, frame, show=0):
     b_boxes = bounding_boxses[:, 1:]
 
     for (x, y, w, h, id) in b_boxes:
-        cv2.rectangle(bounded_frame, (x, y), (x + w, y + h), color[id % 7], 2)
+        cv2.rectangle(bounded_frame, (x, y), (x + w, y + h), color[id % len(color)], 2)
 
     if show != 0:
         plt.imshow(bounded_frame)
