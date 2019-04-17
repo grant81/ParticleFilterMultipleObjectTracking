@@ -59,7 +59,9 @@ totalFP = 0
 totalFN = 0
 totalIDSW = 0
 totalTP = 0
+totalOverlap = 0
 MOTA = 0
+MOTP = 0
 total_detections = 0
 for frame in range(0, number_of_frames):
     FP = 0
@@ -86,6 +88,7 @@ for frame in range(0, number_of_frames):
                 FN += 1
             else:
                 object_gt_correspondance[ground_truth_data[a.gt, 4]] = {tracker_data[a.tr, 4]}
+                totalOverlap += a.confidence
                 TP += 1
     else:
         assignment, remaining_tr_id, remaining_gt_id = greedy_assignment(IOU_score_matrix)
@@ -103,9 +106,11 @@ for frame in range(0, number_of_frames):
                         IDSW += 1
                     else:
                         TP += 1
+                        totalOverlap += a.confidence
                 else:
                     object_gt_correspondance[gt_id] = {tr_id}
                     TP += 1
+                    totalOverlap += a.confidence
     total_detections += ground_truth_data.shape[0]
     MOTA = (MOTA * frame + (FP + FN + IDSW) / ground_truth_data.shape[0]) / (frame + 1)
     totalFN += FN
@@ -115,6 +120,7 @@ for frame in range(0, number_of_frames):
     # precision = (precision * frame + TP / (ground_truth_data.shape[0])) / (frame + 1)
 
 MOTA = 1 - MOTA
-print('MOTA: {}, Precision: {}, FN: {}, FP: {}, IDSW: {}'.format(MOTA, totalTP / (totalTP + totalFP),
+print('MOTP:{}, MOTA: {}, Precision: {}, FN: {}, FP: {}, IDSW: {}'.format(totalOverlap/totalTP, MOTA, totalTP / (totalTP + totalFP),
                                                                  totalFN / total_detections,
                                                                  totalFP / total_detections, totalIDSW))
+print(total_detections)
