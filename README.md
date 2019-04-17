@@ -9,9 +9,15 @@ Project dependency: OpenCV
 6. to split a video into frames run split_video_by_frame
 
 data format
+
 frame_0000.txt
+
 0 499 157 31 75 9
+
 0 258 218 32 88 15
+
 0 633 241 42 81 19
+
 the columns are
-frame number, x position of the left corner of the bounding box y position of the bounding box, x center position, y center position, identity
+
+frame number, x position of the left corner of the bounding box, y position of the bounding box, x center position, y center position, identity
